@@ -16,10 +16,26 @@ const getDirections = async (route) => {
   return directionsData;
 };
 
+const getStops = async (route, dir) => {
+  const routeNum = Number(route);
+  const busTrackerApiPromise = axios.get(`http://ctabustracker.com/bustime/api/v2/getstops?key=${process.env.API_KEY}&rt=${routeNum}&dir=${dir}&format=json`);
+  const [busTrackerApi] = await Promise.all([busTrackerApiPromise]);
+  const stopsData = busTrackerApi.data;
+  return stopsData;
+};
 
-// http://www.ctabustracker.com/bustime/api/v1/getstops?key=89dj2he89d8j3j3ksjhdue93j&rt=20&dir=East%20Bound
+const getTimes = async (route, stop) => {
+  const routeNum = Number(route);
+  const busTrackerApiPromise = axios.get(`http://ctabustracker.com/bustime/api/v2/getpredictions?key=${process.env.API_KEY}&rt=${routeNum}&stpid=${stop}&format=json`);
+  const [busTrackerApi] = await Promise.all([busTrackerApiPromise]);
+  const stopsData = busTrackerApi.data;
+  return stopsData;
+};
+
 
 module.exports = {
   busFunc,
-  getDirections
+  getDirections,
+  getStops,
+  getTimes
 };

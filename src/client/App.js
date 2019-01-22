@@ -13,7 +13,9 @@ export default class App extends Component {
       options: [{ value: 'nothing', label: 'wtf is label' }],
       selectedOption: null,
       directionsOptions: [{ value: 'nothing', label: 'wtf is label' }],
-      selectedDirectionsOptions: null
+      selectedDirectionsOptions: null,
+      stopOptions: [{ value: 'nothing', label: 'wtf is label' }],
+      selectedStopOptions: null,
     };
     this.timer = this.timer.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -38,8 +40,6 @@ export default class App extends Component {
 
   handleChange = (selectedOption) => {
     this.setState({ selectedOption });
-    console.log('handling change');
-    console.log('the id :', selectedOption.value);
     fetch('/api/getDirections', {
       method: 'POST', // or 'PUT'
       headers: {
@@ -60,25 +60,53 @@ export default class App extends Component {
     this.timer();
   }
 
-  handleDirChange = (selectedOption) => {
-    this.setState({ selectedOption });
-    fetch('/api/getDirections', {
+  handleDirChange = (selectedDirectionsOptions) => {
+    const { selectedOption } = this.state;
+    const dirWord = selectedDirectionsOptions.value;
+    this.setState({ selectedDirectionsOptions });
+    fetch('/api/getStops', {
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',
+        'route-id': selectedOption.value,
+        'route-dir': dirWord
       }
     })
       .then(res => res.json())
       .then((data) => {
-        const directionsOptions = [];
-        const dataDirectionsOptions = data.busDataDirObj['bustime-response'];
-        const dirArr = dataDirectionsOptions.directions;
-        dirArr.forEach((direction) => {
-          directionsOptions.push({ value: direction.dir, label: direction.dir });
+        const stopOptions = [];
+        const stopsArr = data.busDataStopsObj['bustime-response'].stops;
+        stopsArr.forEach((stop) => {
+          stopOptions.push({ value: stop.stpid, label: stop.stpnm });
         });
-        this.setState({ directionsOptions });
+        this.setState({ stopOptions });
       });
     this.timer();
+  }
+
+  handleStopChange = (selectedStopOptions) => {
+    const { selectedOption } = this.state;
+    const stopId = selectedStopOptions.value;
+    console.log('stopId :', stopId);
+    console.log('selectedOption.value :', selectedOption.value);
+    this.setState({ selectedStopOptions });
+    fetch('/api/getPrdTimes', {
+      method: 'POST', // or 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+        'route-id': selectedOption.value,
+        'stop-id': stopId
+      }
+    })
+      .then(res => res.json())
+      .then((data) => {
+        // const stopOptions = [];
+        console.log('here bruv');
+        console.log('data.busDataStopsObj :', data.busDataTimesObj);
+        const timeObj = data.busDataTimesObj['bustime-response'];
+        console.log('timeObj :', timeObj);
+        this.setState({ busData: timeObj });
+      });
   }
 
   timer = () => {
@@ -98,7 +126,9 @@ export default class App extends Component {
       options,
       selectedOption,
       directionsOptions,
-      selectedDirectionsOptions
+      selectedDirectionsOptions,
+      stopOptions,
+      selectedStopOptions
     } = this.state;
     const busDataPrd = busData ? busData.prd : [];
     const date = new Date();
@@ -130,14 +160,14 @@ export default class App extends Component {
             </th>
           </tr>
           {busDataPrd ? busDataPrd.map(bus => (
-            <tr key={bus.vid}>
+            <tr key={bus.vid} className={bus.prdctdn < 5 ? 'arriving-soon' : ''}>
               <td>
                 {bus.vid}
               </td>
               <td>
                 {typeof bus.dstp === 'number' ? Math.round(bus.dstp / 5280 * 100) / 100 : bus.dstp}
               </td>
-              <td>
+              <td className={bus.prdctdn <= 2 ? 'arriving-verysoon' : ''}>
                 {bus.prdctdn}
               </td>
               <td>
@@ -161,20 +191,35 @@ export default class App extends Component {
             )}
         </table>
         <p>Customize your experience...</p>
-        { selectedOption === null ? <p>Select a route</p> : <div />}
-        <Select
-          value={selectedOption}
-          onChange={this.handleChange}
-          options={options}
-          className="react-select"
-        />
-        { selectedDirectionsOptions === null ? <p>Select directions for the route</p> : <div />}
-        <Select
-          value={selectedDirectionsOptions}
-          onChange={this.handleDirChange}
-          options={directionsOptions}
-          className="react-select"
-        />
+        <div className="select-container">
+          <div className="select-item">
+            { selectedOption === null ? <p>Select a route</p> : <div />}
+            <Select
+              value={selectedOption}
+              onChange={this.handleChange}
+              options={options}
+              className="react-select"
+            />
+          </div>
+          <div className="select-item">
+            { selectedDirectionsOptions === null ? <p>Select directions for the route</p> : <div />}
+            <Select
+              value={selectedDirectionsOptions}
+              onChange={this.handleDirChange}
+              options={directionsOptions}
+              className="react-select"
+            />
+          </div>
+          <div className="select-item">
+            { selectedStopOptions === null ? <p>Select stop for the route</p> : <div />}
+            <Select
+              value={selectedStopOptions}
+              onChange={this.handleStopChange}
+              options={stopOptions}
+              className="react-select"
+            />
+          </div>
+        </div>
         <p>Updates this session: </p>
         {currentCount}
         { /* username ? <h1>{`Hello ${username}`}</h1> : <h1>Loading.. please wait!</h1> */}
