@@ -11,7 +11,6 @@ const {
 const app = aa(express());
 
 app.use(express.static('dist'));
-app.get('/api/getUsername', (req, res) => res.send({ username: os.userInfo().username }));
 app.get('/api/busTracker', async (req, res) => {
   const busDataObj = await busFunc();
   return res.send({

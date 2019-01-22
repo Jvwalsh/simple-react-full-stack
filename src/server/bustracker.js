@@ -1,7 +1,6 @@
 const axios = require('axios');
 
 const busFunc = async () => {
-  console.log('are we calling?');
   const busTrackerApiPromise = axios.get(`http://ctabustracker.com/bustime/api/v2/getpredictions?key=${process.env.API_KEY}&rt=82&stpid=11261&format=json`);
   const [busTrackerApi] = await Promise.all([busTrackerApiPromise]);
   const busData = busTrackerApi.data;

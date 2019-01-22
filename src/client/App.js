@@ -87,8 +87,6 @@ export default class App extends Component {
   handleStopChange = (selectedStopOptions) => {
     const { selectedOption } = this.state;
     const stopId = selectedStopOptions.value;
-    console.log('stopId :', stopId);
-    console.log('selectedOption.value :', selectedOption.value);
     this.setState({ selectedStopOptions });
     fetch('/api/getPrdTimes', {
       method: 'POST', // or 'PUT'
@@ -100,11 +98,7 @@ export default class App extends Component {
     })
       .then(res => res.json())
       .then((data) => {
-        // const stopOptions = [];
-        console.log('here bruv');
-        console.log('data.busDataStopsObj :', data.busDataTimesObj);
         const timeObj = data.busDataTimesObj['bustime-response'];
-        console.log('timeObj :', timeObj);
         this.setState({ busData: timeObj });
       });
   }
@@ -222,7 +216,6 @@ export default class App extends Component {
         </div>
         <p>Updates this session: </p>
         {currentCount}
-        { /* username ? <h1>{`Hello ${username}`}</h1> : <h1>Loading.. please wait!</h1> */}
       </div>
     );
   }
